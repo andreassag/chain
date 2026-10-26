@@ -1,4 +1,8 @@
-# chain: Minimizer Seed-and-Chain Engine (`minimap2`-lite)
+> [!IMPORTANT]
+> **Archival Notice**
+> This repository is archived and is no longer actively maintained.
+
+# chain: Minimizer Seed-and-Chain Engine
 
 [![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
