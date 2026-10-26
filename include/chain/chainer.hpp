@@ -213,17 +213,36 @@ public:
                 }
 
                 // Check circular wrap
-                if (params_.circular && chain.ref_end >= ref_len) {
-                    chain.is_circular_wrap = true;
-                    // Normalize reference coordinates modulo ref_len
-                    if (chain.ref_start >= ref_len) {
-                        chain.ref_start -= ref_len;
-                        chain.ref_end -= ref_len;
+                if (params_.circular) {
+                    if (chain.ref_start < ref_len && chain.ref_end > ref_len) {
+                        chain.is_circular_wrap = true;
+                    } else {
+                        chain.is_circular_wrap = false;
+                        if (chain.ref_start >= ref_len) {
+                            chain.ref_start -= ref_len;
+                            chain.ref_end -= ref_len;
+                        }
                     }
                 }
 
                 chain.anchors = std::move(chain_anchors);
-                all_chains.push_back(std::move(chain));
+
+                // Deduplicate identical chains
+                bool is_dup = false;
+                for (const auto& existing : all_chains) {
+                    if (existing.is_rev == chain.is_rev &&
+                        existing.ref_start == chain.ref_start &&
+                        existing.ref_end == chain.ref_end &&
+                        existing.query_start == chain.query_start &&
+                        existing.query_end == chain.query_end &&
+                        existing.score == chain.score) {
+                        is_dup = true;
+                        break;
+                    }
+                }
+                if (!is_dup) {
+                    all_chains.push_back(std::move(chain));
+                }
             }
         };
 

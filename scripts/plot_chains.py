@@ -89,25 +89,65 @@ def generate_svg(records, max_q, max_r, out_path):
 
     # Draw chain segments
     for rec in records:
-        x1 = margin + (rec['r_start'] / max_r) * plot_w
-        x2 = margin + (rec['r_end'] / max_r) * plot_w
-        if rec['strand'] == '+':
-            y1 = margin + plot_h - (rec['q_start'] / max_q) * plot_h
-            y2 = margin + plot_h - (rec['q_end'] / max_q) * plot_h
-            color = '#0969da' # Blue for forward
-        else:
-            y1 = margin + plot_h - (rec['q_end'] / max_q) * plot_h
-            y2 = margin + plot_h - (rec['q_start'] / max_q) * plot_h
-            color = '#cf222e' # Red for reverse
-
+        color = '#0969da' if rec['strand'] == '+' else '#cf222e'
         if rec['circ'] == 'true':
             color = '#8250df' # Purple for circular wrapping chains
 
-        ET.SubElement(svg, 'line', {
-            'x1': f'{x1:.1f}', 'y1': f'{y1:.1f}',
-            'x2': f'{x2:.1f}', 'y2': f'{y2:.1f}',
-            'stroke': color, 'stroke-width': '3', 'stroke-linecap': 'round'
-        })
+        if rec['r_end'] > max_r and rec['r_start'] < max_r:
+            # Origin wrap: split into two line segments
+            split_frac = (max_r - rec['r_start']) / (rec['r_end'] - rec['r_start'])
+            if rec['strand'] == '+':
+                q_split = rec['q_start'] + split_frac * (rec['q_end'] - rec['q_start'])
+                # Segment 1: [r_start, max_r]
+                x1_a = margin + (rec['r_start'] / max_r) * plot_w
+                x2_a = margin + plot_w
+                y1_a = margin + plot_h - (rec['q_start'] / max_q) * plot_h
+                y2_a = margin + plot_h - (q_split / max_q) * plot_h
+
+                # Segment 2: [0, r_end - max_r]
+                x1_b = margin
+                x2_b = margin + ((rec['r_end'] - max_r) / max_r) * plot_w
+                y1_b = y2_a
+                y2_b = margin + plot_h - (rec['q_end'] / max_q) * plot_h
+            else:
+                q_split = rec['q_end'] - split_frac * (rec['q_end'] - rec['q_start'])
+                # Segment 1
+                x1_a = margin + (rec['r_start'] / max_r) * plot_w
+                x2_a = margin + plot_w
+                y1_a = margin + plot_h - (rec['q_end'] / max_q) * plot_h
+                y2_a = margin + plot_h - (q_split / max_q) * plot_h
+
+                # Segment 2
+                x1_b = margin
+                x2_b = margin + ((rec['r_end'] - max_r) / max_r) * plot_w
+                y1_b = y2_a
+                y2_b = margin + plot_h - (rec['q_start'] / max_q) * plot_h
+
+            ET.SubElement(svg, 'line', {
+                'x1': f'{x1_a:.1f}', 'y1': f'{y1_a:.1f}',
+                'x2': f'{x2_a:.1f}', 'y2': f'{y2_a:.1f}',
+                'stroke': color, 'stroke-width': '3', 'stroke-linecap': 'round'
+            })
+            ET.SubElement(svg, 'line', {
+                'x1': f'{x1_b:.1f}', 'y1': f'{y1_b:.1f}',
+                'x2': f'{x2_b:.1f}', 'y2': f'{y2_b:.1f}',
+                'stroke': color, 'stroke-width': '3', 'stroke-linecap': 'round'
+            })
+        else:
+            x1 = margin + (rec['r_start'] / max_r) * plot_w
+            x2 = margin + (rec['r_end'] / max_r) * plot_w
+            if rec['strand'] == '+':
+                y1 = margin + plot_h - (rec['q_start'] / max_q) * plot_h
+                y2 = margin + plot_h - (rec['q_end'] / max_q) * plot_h
+            else:
+                y1 = margin + plot_h - (rec['q_end'] / max_q) * plot_h
+                y2 = margin + plot_h - (rec['q_start'] / max_q) * plot_h
+
+            ET.SubElement(svg, 'line', {
+                'x1': f'{x1:.1f}', 'y1': f'{y1:.1f}',
+                'x2': f'{x2:.1f}', 'y2': f'{y2:.1f}',
+                'stroke': color, 'stroke-width': '3', 'stroke-linecap': 'round'
+            })
 
     with open(out_path, 'wb') as f:
         f.write(ET.tostring(svg))
