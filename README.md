@@ -1,6 +1,5 @@
-> [!IMPORTANT]
-> **Archival Notice**
-> This repository is archived and is no longer actively maintained.
+> [!NOTE]
+> **Archive Notice**: This project is an educational and reference implementation of minimizer seed-and-chaining in C++20. It is finished and archived; no active maintenance or feature development is planned.
 
 # chain: Minimizer Seed-and-Chain Engine
 
